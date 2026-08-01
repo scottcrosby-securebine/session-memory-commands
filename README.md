@@ -8,6 +8,11 @@ across agent sessions without dragging the transcript along.
 | `/primer` | Cold start | Orients an agent that has never seen the repo, quotes the prior session's kickoff, reports drift, explains the project |
 | `/LoadMemory` | Warm resume | State only, no codebase tour. Reads the memory file, hydrates issues, reports drift |
 | `/BackupMemory` | Session end | Updates `SESSION_MEMORY.md` — merging, not overwriting — then verifies and commits it |
+| `/handoff-doc` | Mid-task cutoff | Compacts *this conversation* into a scratch document a fresh agent can resume from |
+
+The first three carry **project state**. `/handoff-doc` carries **conversation
+state** — different lifetimes, and useful together when a long session ends
+mid-task: the handoff holds the reasoning, `SESSION_MEMORY.md` holds the state.
 
 ## The contract
 
@@ -97,6 +102,19 @@ rather than skipping in silence. The one it looks for:
 Note it ships `disable-model-invocation: true`, so it is user-invoked only —
 `/BackupMemory` **reads** the file for its rules rather than invoking the skill.
 That also means it works when installed globally, without per-repo setup.
+
+### Why `/handoff-doc` exists alongside it
+
+`disable-model-invocation: true` means an agent cannot fire the skill on its own;
+only you can, by typing `/handoff`. `/handoff-doc` is a thin model-invocable
+wrapper that **reads** those rules and applies them, so you can just ask for a
+handoff document in conversation.
+
+It deliberately does not fork the skill. When the skill is present, its rules
+win — including where to save the file — so upstream improvements are inherited.
+When it is absent, the wrapper falls back to a short generic spec and says which
+skill would sharpen it. Matt's skill is never modified, and a stale lockfile pin
+or a skill update cannot break this plugin.
 
 ## Project overrides
 

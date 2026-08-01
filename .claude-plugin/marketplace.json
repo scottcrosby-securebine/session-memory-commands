@@ -8,7 +8,7 @@
     {
       "name": "session-memory",
       "source": "./",
-      "description": "Session continuity commands: /primer (cold start + drift report), /LoadMemory (warm resume), /BackupMemory (write the handoff). One shared SESSION_MEMORY.md contract, verified rather than assumed."
+      "description": "Session continuity commands: /primer (cold start + drift report), /LoadMemory (warm resume), /BackupMemory (durable project handoff), /handoff-doc (compact this conversation for a fresh agent). One shared SESSION_MEMORY.md contract, verified rather than assumed."
     }
   ]
 }
