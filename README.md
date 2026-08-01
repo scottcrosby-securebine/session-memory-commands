@@ -72,14 +72,31 @@ otherwise resolve against the wrong repository and return an unrelated issue.
 /plugin install session-memory@session-memory-commands
 ```
 
-## Composing
+## Optional companion: the `handoff` skill
+
+**Not required.** All three commands work fully on their own, and nothing here
+fails without it.
 
 `/BackupMemory` will use a `handoff` skill if one is installed, applying its
-*content* discipline (reference rather than restate, name the skills the next
-session should invoke, redact secrets) to the Resume and Kickoff sections. It
-points at that skill rather than copying it, so improvements are inherited. Only
-the content rules transfer — a handoff skill that writes to a temp directory
-does not override this command's committed file.
+*content* discipline — reference rather than restate, name the skills the next
+session should invoke, redact secrets — to the Resume and Kickoff sections. It
+points at the skill rather than copying it, so improvements are inherited. Only
+the content rules transfer: a handoff skill that writes to a temp directory does
+not override this command's committed file.
+
+When no handoff skill is found, `/BackupMemory` says so once and continues,
+rather than skipping in silence. The one it looks for:
+
+| | |
+|---|---|
+| Skill | `handoff` — Matt Pocock's |
+| Source | [`mattpocock/skills`](https://github.com/mattpocock/skills) |
+| Path | `skills/productivity/handoff/SKILL.md` |
+| Looked for at | `~/.claude/skills/handoff/SKILL.md`, then `.claude/skills/handoff/SKILL.md` |
+
+Note it ships `disable-model-invocation: true`, so it is user-invoked only —
+`/BackupMemory` **reads** the file for its rules rather than invoking the skill.
+That also means it works when installed globally, without per-repo setup.
 
 ## Project overrides
 

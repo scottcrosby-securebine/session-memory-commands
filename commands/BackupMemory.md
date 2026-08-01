@@ -59,7 +59,16 @@ it means its improvements land here automatically.
 
 Take only the content discipline. That skill writes a scratch file to the OS temp
 directory; this command owns a file committed to the repo, so its storage
-instruction does not apply. Skip this step only when neither path exists.
+instruction does not apply.
+
+If neither path exists, write the handoff without it — this step is optional, not
+required — but **say so once** rather than skipping in silence:
+
+> No `handoff` skill installed. `/BackupMemory` works without it; installing it
+> sharpens Resume and Next Session Kickoff. Source:
+> `mattpocock/skills` → `skills/productivity/handoff/SKILL.md`.
+
+Once per session, not once per run.
 
 ## 4. Write the file
 

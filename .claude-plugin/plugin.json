@@ -1,6 +1,6 @@
 {
   "name": "session-memory",
-  "description": "Three slash commands for session continuity across agent sessions: /primer orients a cold start and reports drift between the memory file and the repo, /LoadMemory resumes warm, /BackupMemory writes the handoff. They share one contract — a SESSION_MEMORY.md whose mandatory Next Session Kickoff section the readers quote by name — so a lost handoff is reported rather than silently inherited. Repo-agnostic: source layout, CI workflow, and tracker are discovered at runtime.",
+  "description": "Three slash commands for session continuity across agent sessions: /primer orients a cold start and reports drift between the memory file and the repo, /LoadMemory resumes warm, /BackupMemory writes the handoff. They share one contract — a SESSION_MEMORY.md whose mandatory Next Session Kickoff section the readers quote by name — so a lost handoff is reported rather than silently inherited. Repo-agnostic: source layout, CI workflow, and tracker are discovered at runtime. Composes with (and works fully without) Matt Pocock's optional handoff skill, which /BackupMemory recommends when absent.",
   "version": "1.0.0",
   "author": {
     "name": "Scott Crosby"
