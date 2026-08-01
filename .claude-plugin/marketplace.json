@@ -1,0 +1,14 @@
+{
+  "name": "session-memory-commands",
+  "owner": {
+    "name": "Scott Crosby",
+    "url": "https://github.com/scottcrosby-securebine"
+  },
+  "plugins": [
+    {
+      "name": "session-memory",
+      "source": "./",
+      "description": "Session continuity commands: /primer (cold start + drift report), /LoadMemory (warm resume), /BackupMemory (write the handoff). One shared SESSION_MEMORY.md contract, verified rather than assumed."
+    }
+  ]
+}
