@@ -20,6 +20,24 @@ Read Gotchas even though the report below only echoes them on request. Step 5 ca
 hand off to `/BackupMemory`, which carries forward what it was told — anything
 you skipped here is a line you may help delete.
 
+## 1b. Act on the kickoff's first line
+
+Before any drift check, read the kickoff's first line. If it names a handoff
+path, read that file in full now, by that path — never the newest file in a
+directory, which on a clone is any of them. If the kickoff line's `state:` is
+`open` (case-insensitive), invoke the `doctrine:doctrine` skill with the Skill
+tool before any other call: the handoff describes the doctrine as it stood when
+it was written, and a session that only reads about the doctrine never loads it.
+`open` means a doctrine phase is open; any other value means do not. If that
+skill is not installed, say so in the Handoff line and continue; the handoff's
+Suggested skills section names what to load instead. The handoff is a dated
+snapshot and the memory file is rewritten at every backup: where the two
+disagree, the memory file's Kickoff is current and the handoff is history, and
+the Handoff line says so. A
+kickoff with no such line predates this rule: quote it as before and say the
+line is missing. A named handoff that does not exist on disk is drift, reported
+in step 4, not silence.
+
 ## 2. Check drift
 
 **Drift** is any gap between what the file claims and what the repo shows. Batch:
@@ -75,6 +93,8 @@ An issue the file calls open but `gh` calls closed is drift — report it.
 
 **Kickoff**: [the file's Next Session Kickoff, verbatim — or "absent" if missing]
 
+**Handoff**: [path read | none named | named but missing] · doctrine [invoked | not open | not installed]
+
 **Drift**: ✅ none | ⚠️ [specific mismatches, one per line]
 
 **Active Work** (hydrated):
@@ -96,4 +116,5 @@ truth instead of inheriting the same stale file.
 ## Done when
 
 Every drift check has run, every bare-`#N` cell is hydrated and every skipped
-cell named, and the kickoff is quoted or its absence flagged.
+cell named, the kickoff is quoted or its absence flagged, and its first line was
+acted on before anything else.

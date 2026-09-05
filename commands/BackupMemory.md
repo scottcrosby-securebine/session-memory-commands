@@ -70,6 +70,60 @@ required — but **say so once** rather than skipping in silence:
 
 Once per session, not once per run.
 
+## 3b. Write the handoff document
+
+When the request asks for a handoff document as well as a backup — the usual
+sentence is "a detailed backup and a handoff document so I can clear the
+session, then continue in a new session" — write one file at
+`docs/handoffs/<YYYY-MM-DD>-<slug>.md`, where `<slug>` names the piece of work.
+A new file every time, beside the previous one, never overwriting: when that
+name is taken, append `-2`, `-3`. The previous file is not edited.
+
+Header lines above section 1: `supersedes: <previous handoff path>` (or
+`supersedes: none`), then whatever header lines the skill that owns the work
+requires — a doctrine phase's are given in doctrine step 5. The previous
+handoff is the file the kickoff's first line names, else none. When that skill
+is not loaded this session, copy the previous handoff's header lines below
+`supersedes:` forward, so the record's path stays in the chain, and refresh the
+state header and the quoted record state line with its line number from the
+record itself; when the record is not on this host, suffix the quoted state
+line with "(copied from <previous handoff>; record not found <today>)".
+
+Sections, in this order and no others:
+
+1. **State in one paragraph** — where the work stands, what is live, the
+   immediate next step.
+2. **Read these, in this order** — each by repo path, never "the newest file in
+   a directory".
+3. **What is open** — one line per item, each pointing at where the detail
+   lives: an issue, the record's line, a spec section.
+4. **Do this first** — the single next action.
+5. **Gotchas this phase produced** — only ones the memory file you are about
+   to write will not carry.
+6. **Suggested skills** — which to invoke, and which first.
+
+The 400-word target is the memory file's; this document is as long as the next
+session needs. Rules, each one a failure found in a live repo:
+
+- **§5 "Reference, never duplicate" applies here too.** Cite code by symbol,
+  not line number.
+- **No scratchpad path and no plugin-cache version path**
+  (`~/.claude/plugins/cache/<x>/1.53.0/...`): the first dies on a bounce, the
+  second on the next version bump, and both were found dead in committed files.
+- **Redact by pattern, not judgement**: `://user:pass@`, `PASSWORD=`,
+  `user@host` ssh targets, private addresses, pane and process ids. Test
+  credentials count; seven committed handoffs carried them.
+- **A repo whose own commands own its session store** (per-workstream
+  envelopes) keeps them. This file is for repos that use the memory file.
+- **Public repo, or a repo an installer's tooling copies whole**: add
+  `docs/handoffs/` to `.gitignore` and say so in the report.
+  `gh repo view --json visibility --jq .visibility` answers the first, and when
+  `gh` errors (no remote, not authenticated) treat the repo as public;
+  `.claude-plugin/plugin.json` or `.claude-plugin/marketplace.json` present
+  answers the second.
+
+The kickoff's first line then names the file (step 4).
+
 ## 4. Write the file
 
 ```markdown
@@ -95,10 +149,25 @@ a legacy tracker id, or a cross-repo ref cannot be hydrated by /LoadMemory.]
 - [Non-obvious discovery that saves the next session real time. Max 3.]
 
 ## Next Session Kickoff
+handoff: docs/handoffs/<file>.md | state: <open|none>
 [What to pick up, in priority order, and any skill to invoke. MANDATORY —
 /primer and /LoadMemory read this section by name and report its absence as a
 lost handoff.]
 ```
+
+The kickoff's first line is machine-shaped; `/LoadMemory` §1b says what the
+loaders do with it. `state: open` means a doctrine phase is open — its record's
+last state line is *Open* or *Blocked* — and `state: none` means anything else,
+including ordinary unfinished work. Whenever this session did not derive the
+doctrine header lines from the record — no handoff written, or one written by
+copying them forward —
+carry the previous first line forward (pointing it at the new handoff if you
+wrote one), read the record's path from the handoff's header lines, and refresh
+the state word from the record's last state line; when no header names a
+record, say no record is named; when one is named but not on this host, keep
+the previous state word and say the record was not found. When the previous kickoff had no machine-shaped first
+line, write `handoff: <the file you wrote this run, or none> | state: none`;
+`handoff: none` means no handoff has ever been named.
 
 `## Next Session Kickoff` is required always. Omit `## Gotchas` only when it is
 empty *and* the previous file had none, and omit `## Runtime` entirely for a
@@ -136,15 +205,25 @@ error this file cannot survive. Count tracked files only — the `grep -v '^??'`
 load-bearing, since untracked tooling and plan directories can inflate a raw
 `git status --short` several-fold.
 
-Then land it. A handoff left uncommitted is a handoff lost:
+Then land it locally. Both lines below name only what you wrote or edited this
+run: drop any path `git check-ignore -q <path>` matches and any file you did
+not touch, and name `.gitignore` only when `git diff -- .gitignore` shows your
+line and nothing else, or the file is untracked and holds nothing but your line
+— a pathspec commit takes the worktree file whole, so someone else's edit there
+would land under your message; leave it and say so.
+If nothing remains, say the files are local and ignored, and stop.
 
 ```bash
-git commit -m "docs(session): <what changed>" -- SESSION_MEMORY.md
-git pull --rebase && git push
-git status -sb               # no [ahead N] means the push landed
+git add -- SESSION_MEMORY.md docs/handoffs/<file>.md .gitignore    # new files: a pathspec commit sees only tracked paths
+git commit -m "docs(session): <what changed>" -- SESSION_MEMORY.md docs/handoffs/<file>.md .gitignore
+git status -sb               # [ahead N] is expected: nothing here pushes
 ```
 
-Commit by pathspec, not `git add` + bare `git commit`. A bare commit ships the
+Never push from this command. A backup is taken mid-thought and pushing
+publishes; push only when the user says to, and say the commit is local until
+then.
+
+Commit by pathspec, never a bare `git commit`. A bare commit ships the
 whole index — including anything another step left staged — and a docs-flavoured
 message on a non-docs change misrepresents the commit. Leave unrelated staged
 work for its own commit and say it is still pending.
@@ -155,6 +234,5 @@ committing to the default branch, with a documented exemption for docs-only
 changes. If the norm is unstated, committing the memory update directly is the
 common case — but say what you did.
 
-If the push fails on a conflict, resolve and retry until it succeeds. If the repo
-has **no remote or no upstream branch**, committing locally is the terminal step —
-say the handoff is committed but unpushed, and stop rather than looping.
+Committing is the terminal step whether or not the repo has a remote: where a
+commit was made, say the handoff is committed and unpushed, and stop.
