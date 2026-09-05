@@ -59,6 +59,10 @@ Different artifacts with different lifetimes:
 When a long session ends mid-task, both earn their keep: the handoff carries the
 reasoning, `SESSION_MEMORY.md` carries the state.
 
+A handoff document the next session resumes the *project* from — the one the
+kickoff names and `/LoadMemory` reads by path — is `/BackupMemory` §3b, not this
+command. This one carries only the conversation's reasoning.
+
 ## Done when
 
 The document is written, its path is reported, and anything sensitive is redacted.

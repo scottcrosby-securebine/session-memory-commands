@@ -50,6 +50,11 @@ If the memory file has a `## Next Session Kickoff` section, quote it verbatim at
 the very top of your reply, ahead of everything else. It is a live instruction
 from the prior session, not history.
 
+Then act on its first line as `/LoadMemory` §1b says: read the handoff
+it names by path, and invoke the doctrine skill before anything after this step
+when the state is open. That step is written there once and not restated here;
+what §1b would put in its Handoff line goes in the drift table's handoff row.
+
 If the file exists but that section is absent, say so plainly — `/BackupMemory`
 is contracted to write it, so its absence means the last handoff was lost. If no
 memory file exists at all, note that and offer `/BackupMemory` at session end.
@@ -69,6 +74,7 @@ HEAD is `8b36d9f7`" beats "state has drifted."
 | A specific issue is open | `gh issue view <N> --json state`, one at a time, and only for bare `#N` — see the skip rule in `/LoadMemory` §3. Never infer closure from absence in a list |
 | "built" | the workflow run above, matched to HEAD's sha |
 | "deployed" | a green build usually means artifacts were published, not deployed. Treat as unverified unless the repo documents a deploy check and you run it |
+| A handoff path in the kickoff | `test -f` it. A named file that is missing is drift, never silence |
 
 Silence on a row means you checked it and it held.
 
