@@ -1,14 +1,15 @@
 # session-memory
 
-Three Claude Code slash commands for **session continuity** — carrying state
-across agent sessions without dragging the transcript along.
+Four session-continuity workflows for **Claude Code and Codex** — carrying state
+across agent sessions without dragging the transcript along. Claude Code uses
+slash commands in `commands/`; Codex uses standalone skills in `skills/`.
 
-| Command | When | What it does |
-|---|---|---|
-| `/primer` | Cold start | Orients an agent that has never seen the repo, quotes the prior session's kickoff, reports drift, explains the project |
-| `/LoadMemory` | Warm resume | State only, no codebase tour. Reads the memory file, hydrates issues, reports drift |
-| `/BackupMemory` | Session end | Updates `SESSION_MEMORY.md` — merging, not overwriting — then verifies and commits it |
-| `/handoff-doc` | Mid-task cutoff | Compacts *this conversation* into a scratch document a fresh agent can resume from |
+| Claude Code | Codex | When | What it does |
+|---|---|---|---|
+| `/primer` | `$session-primer` | Cold start | Orients a new agent, quotes the prior kickoff, reports drift, explains the project |
+| `/LoadMemory` | `$load-memory` | Warm resume | Reads saved state, hydrates issues, reports drift without a codebase tour |
+| `/BackupMemory` | `$backup-memory` | Session end | Merges and verifies `SESSION_MEMORY.md`, writes the handoff document when asked, commits, never pushes |
+| `/handoff-doc` | `$handoff-doc` | Mid-task cutoff | Compacts this conversation into a temporary document a fresh agent can resume from |
 
 The first three carry **project state**. `/handoff-doc` carries **conversation
 state** — different lifetimes, and useful together when a long session ends
@@ -16,16 +17,18 @@ mid-task: the handoff holds the reasoning, `SESSION_MEMORY.md` holds the state.
 
 ## The contract
 
-All three revolve around one file, `SESSION_MEMORY.md`, and one section:
+The first three workflows in both tools revolve around one file,
+`SESSION_MEMORY.md`, and one section:
 
 ```markdown
 ## Next Session Kickoff
 ```
 
-`/BackupMemory` must write it. `/primer` and `/LoadMemory` quote it by name and
+Both backup variants must write it. The primer and load variants quote it by name and
 **report its absence as a lost handoff**. That single rule is the point of the
 set — a handoff that silently vanishes is worse than no handoff, because nobody
-goes looking for it.
+goes looking for it. Codex redacts sensitive values before quoting and marks
+those redactions. Both tools can read the same memory file without conversion.
 
 ## Why these exist
 
@@ -34,7 +37,7 @@ its readers grepped for, so following the documented process destroyed the
 handoff with no error. Hardening them surfaced a family of the same defect —
 checks that looked like checks but could not fail.
 
-Every instruction here was verified by running it, not by reasoning about it:
+The original Claude Code commands were hardened against these failures:
 
 - **Drift is measured, not asserted.** Memory rots between sessions, so each
   claim is checked against the repo — branch, tree, PRs, issue state, CI — and
@@ -72,15 +75,74 @@ otherwise resolve against the wrong repository and return an unrelated issue.
 
 ## Install
 
+### Claude Code
+
 ```
 /plugin marketplace add scottcrosby-securebine/session-memory-commands
 /plugin install session-memory@session-memory-commands
 ```
 
+### Codex
+
+From a local checkout, copy the four skill directories into your user skills
+directory. These commands are for Bash on Linux or macOS:
+
+```bash
+cd /path/to/session-memory-commands
+mkdir -p "$HOME/.agents/skills"
+for skill in backup-memory load-memory session-primer handoff-doc; do
+  if [ -e "$HOME/.agents/skills/$skill" ] || [ -L "$HOME/.agents/skills/$skill" ]; then
+    echo "Already installed; review before replacing: $skill"
+  else
+    cp -R "skills/$skill" "$HOME/.agents/skills/$skill"
+  fi
+done
+# Each skill is a pointer to its command file; copy the rules beside it.
+cp commands/BackupMemory.md "$HOME/.agents/skills/backup-memory/rules.md"
+cp commands/LoadMemory.md   "$HOME/.agents/skills/load-memory/rules.md"
+cp commands/primer.md       "$HOME/.agents/skills/session-primer/rules.md"
+cp commands/handoff-doc.md  "$HOME/.agents/skills/handoff-doc/rules.md"
+```
+
+For one project, copy those directories into that project's `.agents/skills/`
+instead. Each skill is self-contained; copying `commands/` or installing the
+Claude Code marketplace plugin is not required for Codex.
+
+In Codex CLI or the IDE extension, use `/skills` to find them or type the `$`
+names in the table above. Natural-language requests such as “use load-memory”
+also work. If newly installed skills do not appear, restart Codex. These paths
+and invocation forms follow the [official Codex skill documentation](https://learn.chatgpt.com/docs/build-skills).
+
+If you already have these skills under `~/.codex/skills` or another configured
+location, update that installation instead of adding a second copy. The copy
+instructions above do not update existing installations automatically.
+
+### Usage and commit behavior
+
+Start an unfamiliar project with `$session-primer`, resume known work with
+`$load-memory`, and save at session end with `$backup-memory`. Use
+`$handoff-doc` when another agent needs the current conversation's reasoning.
+
+`/BackupMemory` and `$backup-memory` run the same text. Both write the memory
+file and, when asked for a handoff document, a dated file under
+`docs/handoffs/`; both commit what they wrote by pathspec and never push. A
+backup is taken mid-thought, and pushing publishes, so the push waits for you to
+say so. The next session's `/LoadMemory` or `$load-memory` reads the handoff by
+the path the kickoff's first line names.
+
+Both versions preserve gotchas and unresolved blockers and distinguish merged,
+deployed, and verified work. Git supplies repository state; GitHub checks use
+an authenticated `gh` CLI when available. Unavailable GitHub evidence is
+reported rather than treated as a successful check.
+
 ## Optional companion: the `handoff` skill
 
-**Not required.** All three commands work fully on their own, and nothing here
+**Not required.** All four workflows work on their own, and nothing here
 fails without it.
+
+The Codex skills run the same command text as Claude Code, so they look for
+Matt Pocock's `handoff` where `/BackupMemory` does, with the same fallback.
+The lookup paths and wrapper behavior below apply to both.
 
 `/BackupMemory` will use a `handoff` skill if one is installed, applying its
 *content* discipline — reference rather than restate, name the skills the next
@@ -122,6 +184,19 @@ A repo with strong conventions can drop its own copy in `.claude/commands/`,
 tightening the generic instructions with real paths and real workflow names.
 Keep the shared contract — especially the kickoff section — or the readers in
 this plugin will correctly report the handoff as lost.
+
+For Codex, put project conventions in `AGENTS.md`, or install customized skill
+copies in the project's `.agents/skills/`. Avoid keeping multiple installed
+copies with the same skill name; Codex does not merge their instructions.
+
+## Repository layout
+
+- `commands/`: Claude Code command instructions.
+- `.claude-plugin/`: Claude Code plugin and marketplace metadata.
+- `skills/<name>/SKILL.md`: Codex skill metadata and instructions.
+
+When changing the memory format or preservation rules, review both the command
+and corresponding skill so either tool can resume the other's saved state.
 
 ## License
 
